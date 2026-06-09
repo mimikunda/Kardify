@@ -22,7 +22,6 @@ class MainActivity : ComponentActivity() {
             KardifyTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     HomeScreen(
-                        name = "Samo",
                         modifier = Modifier.padding(innerPadding)
                     )
                 }

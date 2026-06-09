@@ -1,8 +1,6 @@
 package com.kardify.app.db
 
 import android.content.Context
-import android.provider.ContactsContract
-import androidx.lifecycle.LiveData
 import androidx.room3.ColumnInfo
 import androidx.room3.Dao
 import androidx.room3.Database
@@ -17,7 +15,6 @@ import androidx.room3.RoomDatabase
 import androidx.room3.Update
 import kotlinx.coroutines.flow.Flow
 
-//samo
 @Entity(tableName = "questions")
 data class Question(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
@@ -36,6 +33,10 @@ interface QuestionDao {
 
     @Delete
     suspend fun delete(question: Question)
+
+
+    @Query("SELECT id FROM questions ORDER BY id ")
+    suspend fun getAllIds(): List<Int>
 
     @Query("SELECT * FROM questions")
     fun getAllQuestions(): Flow<List<Question>>

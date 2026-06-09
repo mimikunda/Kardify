@@ -1,5 +1,6 @@
 package com.kardify.app.ui.screens
 
+import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,26 +14,42 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
+import androidx.room3.Room
+import com.kardify.app.db.Question
+import com.kardify.app.db.QuestionDatabase
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun HomeScreen(name: String, modifier: Modifier = Modifier) {
+fun HomeScreen(modifier: Modifier = Modifier) {
+
+    val db = QuestionDatabase.getDatabase(LocalContext.current)
+    val dao = db.questionDao()
+    val scope = rememberCoroutineScope()
+
 
     val frontSideEntryState = rememberTextFieldState()
     val backSideEntryState = rememberTextFieldState()
@@ -41,8 +58,8 @@ fun HomeScreen(name: String, modifier: Modifier = Modifier) {
     var isBackSideEntryError by rememberSaveable { mutableStateOf(false) }
     var isError by rememberSaveable { mutableStateOf(false) }
 
-    var testDisplayText by rememberSaveable { mutableStateOf("test")}
-    var testDisplayText2 by rememberSaveable { mutableStateOf("test2")}
+    val questionList by dao.getAllQuestions().collectAsState(initial = emptyList())
+
 
     fun validate(text: CharSequence, index: Int) {
         isError = text.isBlank()
@@ -53,11 +70,19 @@ fun HomeScreen(name: String, modifier: Modifier = Modifier) {
             }
 
     }
-    
-    fun submitPair(frontSide: String, backSide: String){ // need to append to something instead of just displaying
-        testDisplayText = frontSide
-        testDisplayText2 = backSide
-        
+
+    fun submitPair(frontSide: String, backSide: String) {
+        validate(frontSideEntryState.text, 1)
+        validate(backSideEntryState.text, 2)
+
+        if (!isError) {
+            scope.launch {
+                val newEntry = Question(frontSide = frontSide, backSide = backSide)
+                dao.insert(newEntry)
+            }
+        }
+
+
     }
 
     LaunchedEffect(Unit) {
@@ -82,43 +107,78 @@ fun HomeScreen(name: String, modifier: Modifier = Modifier) {
                 .fillMaxWidth(),
             contentAlignment = Alignment.Center
         ) {
-            Card {
-                Column(
-                    Modifier.padding(18.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                   Row() {
-                        Text(testDisplayText)
-                       Spacer(Modifier.width(10.dp))
-                       Text(testDisplayText2)
-                       
-                    }
-                    Spacer(Modifier.height(2.dp))
-                    TextField(
-                        state = frontSideEntryState,
-                        lineLimits = TextFieldLineLimits.SingleLine,
-                        label = { Text(if (isFrontSideEntryError) "Field empty" else "Question") },
-                        isError = isFrontSideEntryError,
-                        onKeyboardAction = { validate(frontSideEntryState.text, 1) },
+            Column() {
+                Card {
+                    Column(
+                        Modifier.padding(18.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        TextField(
+                            state = frontSideEntryState,
+                            lineLimits = TextFieldLineLimits.SingleLine,
+                            label = { Text(if (isFrontSideEntryError) "Field empty" else "Question") },
+                            isError = isFrontSideEntryError,
+                            onKeyboardAction = { validate(frontSideEntryState.text, 1) },
 
-                    )
-                    Spacer(Modifier.height(2.dp))
-                    TextField(
-                        state = backSideEntryState,
-                        lineLimits = TextFieldLineLimits.SingleLine,
-                        label = { Text(if (isBackSideEntryError) "Field empty" else "Answer") },
-                        isError = isBackSideEntryError,
-                        onKeyboardAction = { validate(backSideEntryState.text, 2) },
+                            )
+                        Spacer(Modifier.height(2.dp))
+                        TextField(
+                            state = backSideEntryState,
+                            lineLimits = TextFieldLineLimits.SingleLine,
+                            label = { Text(if (isBackSideEntryError) "Field empty" else "Answer") },
+                            isError = isBackSideEntryError,
+                            onKeyboardAction = { validate(backSideEntryState.text, 2) },
 
-                        )
-                    Spacer(Modifier.height(2.dp))
-                    Button(
-                        onClick = {
-                            submitPair(frontSideEntryState.text.toString(), backSideEntryState.text.toString())
+                            )
+                        Spacer(Modifier.height(2.dp))
+                        Row() {
+                            Button(
+                                onClick = {
+                                    submitPair(
+                                        frontSideEntryState.text.toString(),
+                                        backSideEntryState.text.toString()
+                                    )
+                                }
+                            )
+                            {
+                                Text("Submit")
+                            }
+                            Button(
+                                onClick = {
+                                    scope.launch {
+                                        val list = dao.getAllIds()
+                                        for (item in list) {
+                                            dao.delete(Question(item, null, null))
+                                        }
+                                    }
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                            )
+                            {
+                                Text("Delete all")
+                            }
                         }
-                    )
-                    {
-                        Text("Submit")
+                    }
+                }
+                Spacer(Modifier.height(10.dp))
+                Card {
+                    Column(
+                        Modifier.padding(18.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+
+
+                        questionList.forEach { item ->
+                            Row(
+                                Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(item.frontSide ?: "empty")
+                                Text(item.backSide ?: "empty")
+                            }
+                        }
+
+
                     }
                 }
             }
