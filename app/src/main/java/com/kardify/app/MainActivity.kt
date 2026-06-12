@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
+import com.kardify.app.ui.screens.CardCreationScreen
 import com.kardify.app.ui.screens.HomeScreen
 import com.kardify.app.ui.theme.KardifyTheme
 
@@ -21,7 +22,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             KardifyTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    HomeScreen(
+                    CardCreationScreen( //add navhost and route there instead
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
