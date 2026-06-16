@@ -177,20 +177,6 @@ fun CardCreationScreen(modifier: Modifier = Modifier) {
                 }
             }
         }
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = "New knowledge awaits. Samo in Tibor",
-                fontStyle = FontStyle.Italic,
-                color = MaterialTheme.colorScheme.secondary
-            )
-
-        }
     }
 }
 

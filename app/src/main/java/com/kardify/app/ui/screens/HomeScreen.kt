@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.foundation.verticalScroll
@@ -35,12 +36,18 @@ import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.material3.carousel.HorizontalUncontainedCarousel
 import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,13 +59,18 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 
 @Composable
-fun HomeScreen(modifier: Modifier = Modifier){
+fun HomeScreen(
+    modifier: Modifier = Modifier,
+    onNavigateToCreation: () -> Unit,
+    onNavigateToReview: (Int) -> Unit
+
+
+){
 
 
     Column(modifier = Modifier
         .fillMaxSize()
-
-        .statusBarsPadding()) { //add padding in navhost later and remove here!
+         ) {
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -76,7 +88,7 @@ fun HomeScreen(modifier: Modifier = Modifier){
 
 
                 Button(
-                    onClick = {},
+                    onClick = { onNavigateToCreation() },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
                     modifier = Modifier.fillMaxWidth(
 
@@ -84,6 +96,12 @@ fun HomeScreen(modifier: Modifier = Modifier){
                 )                {
                     Text("Create a deck")
                 }
+
+                Spacer(Modifier.weight(1f))
+
+                TestReviewEntry(onNavigateToReview)
+
+
             }
         }
 
@@ -232,5 +250,31 @@ private fun SampleSearchResults(onResultClick: (String) -> Unit, modifier: Modif
                         .padding(horizontal = 16.dp, vertical = 4.dp),
             )
         }
+    }
+}
+
+
+@Composable
+fun TestReviewEntry(onNavigateToReview: (Int) -> Unit) {
+    val state = rememberTextFieldState()
+    var isError by rememberSaveable { mutableStateOf(false) }
+
+    Column() {
+        TextField(
+            state = state,
+            label = { Text(" Test -> Navigate by deckId") },
+            isError = isError,
+            lineLimits = TextFieldLineLimits.SingleLine,
+            onKeyboardAction = {
+                val inputString = state.text.toString()
+        val targetId = inputString.toIntOrNull()
+
+        if (targetId != null) {
+            onNavigateToReview(targetId)
+        } else {
+            isError = true
+        }
+            }
+        )
     }
 }
