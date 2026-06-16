@@ -12,6 +12,7 @@ room3Common = "3.0.0-alpha05"
 room3Runtime = "3.0.0-alpha05"
 ksp = "2.1.0-1.0.29"
 materialIconsExtended = "1.7.8"
+firebaseDatabaseKtx = "22.0.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -32,6 +33,7 @@ androidx-room3-common = { group = "androidx.room3", name = "room3-common", versi
 androidx-room3-runtime = { group = "androidx.room3", name = "room3-runtime", version.ref = "room3Runtime" }
 androidx-room3-compiler = { group = "androidx.room3", name = "room3-compiler", version.ref = "room3Common" }
 androidx-compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended", version.ref = "materialIconsExtended" }
+firebase-database-ktx = { group = "com.google.firebase", name = "firebase-database-ktx", version.ref = "firebaseDatabaseKtx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

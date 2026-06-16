@@ -14,6 +14,11 @@ import androidx.room3.Room
 import androidx.room3.RoomDatabase
 import androidx.room3.Update
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import java.util.UUID
 
 @Entity(tableName = "questions")
 data class Question(
@@ -22,10 +27,9 @@ data class Question(
     @ColumnInfo(name = "back_side") val backSide: String?
 )
 
-
 @Dao
 interface QuestionDao {
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(question: Question)
 
     @Update
@@ -34,13 +38,17 @@ interface QuestionDao {
     @Delete
     suspend fun delete(question: Question)
 
-
-    @Query("SELECT id FROM questions ORDER BY id ")
+    @Query("SELECT id FROM questions ORDER BY id")
     suspend fun getAllIds(): List<Int>
 
-    @Query("SELECT * FROM questions")
+    @Query("SELECT * FROM questions ORDER BY id")
     fun getAllQuestions(): Flow<List<Question>>
+
+
+    @Query("DELETE FROM questions")
+    suspend fun deleteAll()
 }
+
 @Database(entities = [Question::class], version = 1)
 abstract class QuestionDatabase : RoomDatabase() {
 
@@ -61,5 +69,66 @@ abstract class QuestionDatabase : RoomDatabase() {
                 instance
             }
         }
+    }
+}
+
+class DatabaseManager(private val context: Context) {
+    private val instances = mutableMapOf<String, QuestionDatabase>()
+
+    fun getDatabase(dbConfig: DatabaseConfig): QuestionDatabase {
+        return instances.getOrPut(dbConfig.name) {
+            Room.databaseBuilder(
+                context.applicationContext,
+                QuestionDatabase::class.java,
+                "${dbConfig.name}.db"
+            ).build()
+        }
+    }
+
+    fun closeDatabase(name: String) {
+        instances[name]?.close()
+        instances.remove(name)
+    }
+
+    fun closeAll() {
+        instances.values.forEach { it.close() }
+        instances.clear()
+    }
+}
+
+data class DatabaseConfig(
+    val id: String = UUID.randomUUID().toString(),
+    val name: String,
+    val displayName: String,
+    val description: String = ""
+)
+
+class DatabaseRepository(
+    private val manager: DatabaseManager,
+    private val context: Context
+) {
+    private val _configs = MutableStateFlow<List<DatabaseConfig>>(emptyList())
+    val configs: StateFlow<List<DatabaseConfig>> = _configs.asStateFlow()
+
+    private val _activeConfig = MutableStateFlow<DatabaseConfig?>(null)
+    val activeConfig: StateFlow<DatabaseConfig?> = _activeConfig.asStateFlow()
+
+    fun addDatabase(config: DatabaseConfig) {
+        _configs.update { it + config }
+    }
+
+    fun removeDatabase(config: DatabaseConfig) {
+        manager.closeDatabase(config.name)
+        _configs.update { it - config }
+        if (_activeConfig.value?.id == config.id) _activeConfig.value = null
+    }
+
+    fun switchTo(config: DatabaseConfig) {
+        _activeConfig.value = config
+    }
+
+    fun activeDao(): QuestionDao? {
+        val config = _activeConfig.value ?: return null
+        return manager.getDatabase(config).questionDao()
     }
 }
