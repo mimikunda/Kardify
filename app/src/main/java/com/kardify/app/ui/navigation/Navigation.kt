@@ -1,6 +1,8 @@
 package com.kardify.app.ui.navigation
 
 import android.widget.MediaController
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.slideOut
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -30,6 +32,10 @@ fun MainNavigation(
     NavHost(
         navController = navController,
         startDestination = HomeRoute,
+        enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
+        exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Start) } ,
+        popEnterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.End) },
+        popExitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) } ,
         modifier = modifier
     ) {
         composable<HomeRoute> {

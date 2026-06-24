@@ -9,13 +9,20 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -31,7 +38,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.kardify.app.db.Question
 import com.kardify.app.db.QuestionDatabase
 import kotlinx.coroutines.launch
@@ -93,89 +102,109 @@ fun CardCreationScreen(modifier: Modifier = Modifier) {
             }
     }
 
-
-    Column(modifier = Modifier.fillMaxSize()) {
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth(),
-            contentAlignment = Alignment.Center
-        ) {
-            Column() {
-                Card {
-                    Column(
-                        Modifier.padding(18.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    )
+    {
+        Column(modifier = Modifier.fillMaxSize()) {
+                Text("Create new deck", textAlign = TextAlign.Center, fontSize = 40.sp)
+                Row(){
+                    Button(
+                        onClick = {},
+                        enabled = false
                     ) {
-                        TextField(
-                            state = frontSideEntryState,
-                            lineLimits = TextFieldLineLimits.SingleLine,
-                            label = { Text(if (isFrontSideEntryError) "Field empty" else "Question") },
-                            isError = isFrontSideEntryError,
-                            onKeyboardAction = { validate(frontSideEntryState.text, 1) },
-
-                            )
-                        Spacer(Modifier.height(2.dp))
-                        TextField(
-                            state = backSideEntryState,
-                            lineLimits = TextFieldLineLimits.SingleLine,
-                            label = { Text(if (isBackSideEntryError) "Field empty" else "Answer") },
-                            isError = isBackSideEntryError,
-                            onKeyboardAction = { validate(backSideEntryState.text, 2) },
-
-                            )
-                        Spacer(Modifier.height(2.dp))
                         Row() {
-                            Button(
-                                onClick = {
-                                    submitPair(
-                                        frontSideEntryState.text.toString(),
-                                        backSideEntryState.text.toString()
-                                    )
+                            Icon(Icons.Default.Add, null)
+                            Text("Import deck")
+                        }
+                    }
+                    Button(
+                        onClick = {
+                            scope.launch {
+                                val list = dao.getAllIds()
+                                for (item in list) {
+                                    dao.delete(Question(item, null, null))
                                 }
-                            )
-                            {
-                                Text("Submit")
                             }
-                            Button(
-                                onClick = {
-                                    scope.launch {
-                                        val list = dao.getAllIds()
-                                        for (item in list) {
-                                            dao.delete(Question(item, null, null))
-                                        }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                    )
+                    {
+                        Text("Delete all")
+                    }
+                    Button(onClick = {}, enabled = false) {
+                        Text("Create")
+                    }
+                }
+                Column() {
+                        Column(
+                            Modifier.padding(18.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            OutlinedTextField(
+                                state = frontSideEntryState,
+                                lineLimits = TextFieldLineLimits.SingleLine,
+                                label = { Text(if (isFrontSideEntryError) "Field empty" else "Question") },
+                                isError = isFrontSideEntryError,
+                                onKeyboardAction = { validate(frontSideEntryState.text, 1) },
+
+                                )
+                            Spacer(Modifier.height(2.dp))
+                            OutlinedTextField(
+                                state = backSideEntryState,
+                                lineLimits = TextFieldLineLimits.SingleLine,
+                                label = { Text(if (isBackSideEntryError) "Field empty" else "Answer") },
+                                isError = isBackSideEntryError,
+                                onKeyboardAction = { validate(backSideEntryState.text, 2) },
+
+                                )
+                            Spacer(Modifier.height(2.dp))
+                            Row() {
+                                Button(onClick = {}, enabled = false) {
+                                    Text("Previous")
+                                }
+                                Button(
+                                    onClick = {
+                                        submitPair(
+                                            frontSideEntryState.text.toString(),
+                                            backSideEntryState.text.toString()
+                                        )
                                     }
-                                },
-                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                            )
-                            {
-                                Text("Delete all")
-                            }
-                        }
-                    }
-                }
-                Spacer(Modifier.height(10.dp))
-                Card {
-                    Column(
-                        Modifier.padding(18.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-
-
-                        questionList.forEach { item ->
-                            Row(
-                                Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(item.frontSide ?: "empty")
-                                Text(item.backSide ?: "empty")
+                                )
+                                {
+                                    Text("Resubmit")
+                                }
+                                Button(onClick = {}, enabled = false) {
+                                    Text("New")
+                                    }
                             }
                         }
 
+                    Spacer(Modifier.height(10.dp))
+                        Divider()
+                    Card {
+                        LazyColumn(
+                            Modifier.padding(18.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
 
+
+                            item { questionList.forEach { item ->
+                                Row(
+                                    Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(item.frontSide ?: "empty")
+                                    Text(item.backSide ?: "empty")
+                                }
+                            }
+                            }
+
+                        }
                     }
                 }
-            }
+
         }
     }
 }

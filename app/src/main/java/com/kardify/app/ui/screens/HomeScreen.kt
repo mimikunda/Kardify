@@ -21,10 +21,22 @@ import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddCard
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Biotech
+import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.Functions
+import androidx.compose.material.icons.filled.Gavel
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Terminal
+import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExpandedFullScreenSearchBar
@@ -45,6 +57,7 @@ import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -52,6 +65,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
@@ -123,25 +137,44 @@ fun HomeScreen(
 
 }
 
+//placeholders, to be removed
+data class CarouselItem(
+    val id: Int,
+    val title: String,
+    val description: String,
+    val icon: ImageVector
+)
+
+val sampleFlashcardDecks =
+    listOf(
+        CarouselItem(0, "Spanish Vocab", "Essential verbs and daily conversational phrases", Icons.Default.Translate),
+        CarouselItem(1, "MCAT Biology", "Cellular respiration, genetics, and organ systems", Icons.Default.Biotech),
+        CarouselItem(2, "World Capitals", "Test your geography knowledge across 6 continents", Icons.Default.Public),
+        CarouselItem(3, "Bar Exam Prep", "Constitutional law and torts deep-dive review", Icons.Default.Gavel),
+        CarouselItem(4, "Japanese Kanji", "JLPT N5 level characters and stroke orders", Icons.Default.MenuBook),
+        CarouselItem(5, "Python Basics", "Syntax, data structures, and OOP principles", Icons.Default.Terminal),
+        CarouselItem(6, "Art History", "Famous masterpieces from the Renaissance to Pop Art", Icons.Default.Palette),
+        CarouselItem(7, "Driving Theory", "Traffic signs, right-of-way rules, and safety", Icons.Default.DirectionsCar),
+        CarouselItem(8, "Human Anatomy", "Skeletal and muscular systems study guide", Icons.Default.FitnessCenter),
+        CarouselItem(9, "Mental Math", "Tricks for fast multiplication and percentages", Icons.Default.Functions)
+    )
+
+
+
 @Composable
 fun DeckHistoryCarousel() {
 
-    data class CarouselItem(
-        val id: Int,
-        val title: String,
-        val description: String,
-    )
+    val items = sampleFlashcardDecks
 
-    val items = listOf(
-        CarouselItem(0, "Deck 1", "Description for Deck 1"),
-        CarouselItem(1, "Deck 2", "Description for Deck 2"),
-        CarouselItem(2, "Deck 3", "Description for Deck 3"),
-        CarouselItem(3, "Deck 4", "Description for Deck 4"),
-        CarouselItem(4, "Deck 5", "Description for Deck 5"),
-    )
-
-    Column(){
-        Text("  Recently Opened") //yeah... I know...
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text(
+            text = "Recently Opened",
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
 
         HorizontalUncontainedCarousel(
             state = rememberCarouselState { items.count() },
@@ -181,7 +214,7 @@ fun DeckHistoryCarousel() {
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Image,
+                            imageVector = item.icon, // Dynamically changes per item
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onPrimaryContainer,
                             modifier = Modifier.size(48.dp)
@@ -199,7 +232,6 @@ fun DeckHistoryCarousel() {
             }
         }
     }
-
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
@@ -234,20 +266,18 @@ fun SimpleSearchBarSample() {
 }
 
 @Composable
-private fun SampleSearchResults(onResultClick: (String) -> Unit, modifier: Modifier = Modifier) { //this is a placeholder from an example. To remove later
+private fun SampleSearchResults(onResultClick: (String) -> Unit, modifier: Modifier = Modifier) {
     Column(modifier.verticalScroll(rememberScrollState())) {
-        repeat(10) { idx ->
-            val resultText = "Suggestion $idx"
+        sampleFlashcardDecks.forEach { item ->
             ListItem(
-                headlineContent = { Text(resultText) },
-                supportingContent = { Text("Additional info") },
-                leadingContent = { Icon(Icons.Filled.Star, contentDescription = null) },
+                headlineContent = { Text(item.title) },
+                supportingContent = { Text(item.description) },
+                leadingContent = { Icon(item.icon, contentDescription = null) },
                 colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                modifier =
-                    Modifier
-                        .clickable { onResultClick(resultText) }
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                modifier = Modifier
+                    .clickable { onResultClick(item.title) }
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
             )
         }
     }
