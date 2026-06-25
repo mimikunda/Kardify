@@ -41,12 +41,34 @@ interface QuestionDao {
     @Query("SELECT id FROM questions ORDER BY id")
     suspend fun getAllIds(): List<Int>
 
+    @Query("SELECT id FROM questions ORDER BY id DESC LIMIT 1")
+    suspend fun getLastId(): Int
+
     @Query("SELECT * FROM questions ORDER BY id")
     fun getAllQuestions(): Flow<List<Question>>
 
 
     @Query("DELETE FROM questions")
     suspend fun deleteAll()
+
+
+    @Query("""
+    DELETE FROM questions
+    WHERE id = :id
+""")
+    suspend fun deletetPairById(id: Int)
+
+    @Query("""
+    SELECT front_side FROM questions
+    WHERE id = :id
+""")
+    suspend fun getFrontSideById(id: Int): String?
+
+    @Query("""
+    SELECT back_side FROM questions
+    WHERE id = :id
+""")
+    suspend fun getBacktSideById(id: Int): String?
 }
 
 @Database(entities = [Question::class], version = 1)
