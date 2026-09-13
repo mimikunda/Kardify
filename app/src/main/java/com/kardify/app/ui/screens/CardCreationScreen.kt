@@ -47,13 +47,18 @@ import androidx.compose.ui.unit.sp
 import com.kardify.app.db.Question
 import com.kardify.app.db.QuestionDatabase
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.remember
+import com.kardify.app.db.DeckStore
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun CardCreationScreen(modifier: Modifier = Modifier) {
+fun CardCreationScreen(modifier: Modifier = Modifier, deckName: String = "New Deck") {
 
-    val db = QuestionDatabase.getDatabase(LocalContext.current)
-    val dao = db.questionDao()
+    val context = LocalContext.current
+    var deckNameEntryState = rememberTextFieldState(deckName)
+    val dao = remember(deckNameEntryState.text.toString()) {
+        DeckStore.daoFor(context, deckNameEntryState.text.toString())
+    }
     val scope = rememberCoroutineScope()
 
 
@@ -132,8 +137,14 @@ fun CardCreationScreen(modifier: Modifier = Modifier) {
     )
     {
         Column(modifier = Modifier.fillMaxSize()) {
+            OutlinedTextField(
+                state = deckNameEntryState,
+                lineLimits = TextFieldLineLimits.SingleLine,
+                label = { Text("Deck name") },
+                modifier = Modifier.padding(horizontal = 18.dp)
+            )
             Text("Create new deck", textAlign = TextAlign.Center, fontSize = 40.sp)
-            Row() {
+            Row()  {
                 Button(
                     onClick = {},
                     enabled = false
@@ -157,7 +168,8 @@ fun CardCreationScreen(modifier: Modifier = Modifier) {
                 {
                     Text("Delete all")
                 }
-                Button(onClick = {}, enabled = false) {
+                Button(onClick = {DeckStore.registerDeck(context, deckNameEntryState.text.toString())
+                }){
                     Text("Create")
                 }
             }

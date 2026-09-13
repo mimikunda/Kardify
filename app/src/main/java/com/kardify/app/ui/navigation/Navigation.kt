@@ -19,8 +19,8 @@ import com.kardify.app.ui.screens.HomeScreen
 @Serializable
 object HomeRoute
 
-@Serializable
-object CardCreationRoute
+@Serializable data class CardCreationRoute(val deckName: String = "New Deck")
+
 
 @Serializable
 data class CardReviewRoute(val deckId: Int)
@@ -40,14 +40,13 @@ fun MainNavigation(
     ) {
         composable<HomeRoute> {
             HomeScreen(
-                onNavigateToCreation = {navController.navigate(CardCreationRoute)},
+                onNavigateToCreation = { deckName -> navController.navigate(CardCreationRoute(deckName = deckName)) },
                 onNavigateToReview = { deckId -> navController.navigate(CardReviewRoute(deckId = deckId))}
             )
-
         }
-
-        composable<CardCreationRoute> {
-            CardCreationScreen()
+        composable<CardCreationRoute> { backStackEntry ->
+            val args: CardCreationRoute = backStackEntry.toRoute()
+            CardCreationScreen(deckName = args.deckName)
         }
 
         composable<CardReviewRoute> { backStackEntry ->

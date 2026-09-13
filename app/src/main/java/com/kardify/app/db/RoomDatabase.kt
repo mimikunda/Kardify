@@ -154,3 +154,29 @@ class DatabaseRepository(
         return manager.getDatabase(config).questionDao()
     }
 }
+private const val PREFS_NAME = "kardify_decks"
+private const val KEY_DECK_NAMES = "deck_names"
+
+object DeckStore {
+    private val openDbs = mutableMapOf<String, QuestionDatabase>()
+
+    fun daoFor(context: Context, deckName: String): QuestionDao {
+        val key = deckName.trim().ifBlank { "untitled" }.replace(Regex("[^A-Za-z0-9_-]"), "_")
+        val db = openDbs.getOrPut(key) {
+            Room.databaseBuilder(context.applicationContext, QuestionDatabase::class.java, "deck_$key.db").build()
+        }
+        return db.questionDao()
+    }
+
+    fun savedDeckNames(context: Context): List<String> {
+        val prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return prefs.getStringSet(KEY_DECK_NAMES, emptySet())?.toList()?.sorted() ?: emptyList()
+    }
+
+    fun registerDeck(context: Context, deckName: String) {
+        if (deckName.isBlank()) return
+        val prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val current = prefs.getStringSet(KEY_DECK_NAMES, emptySet()) ?: emptySet()
+        prefs.edit().putStringSet(KEY_DECK_NAMES, current + deckName).apply()
+    }
+}

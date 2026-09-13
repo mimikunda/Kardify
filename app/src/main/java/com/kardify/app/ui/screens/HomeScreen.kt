@@ -71,16 +71,18 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
-
+import androidx.compose.ui.platform.LocalContext
+import com.kardify.app.db.DeckStore
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
-    onNavigateToCreation: () -> Unit,
+    onNavigateToCreation: (String) -> Unit,
     onNavigateToReview: (Int) -> Unit
 
 
 ){
-
+    val context = LocalContext.current
+    val savedDecks = DeckStore.savedDeckNames(context)
 
     Column(modifier = Modifier
         .fillMaxSize()
@@ -96,13 +98,13 @@ fun HomeScreen(
 
                 Spacer(Modifier.height(16.dp))
 
-                DeckHistoryCarousel()
+                DeckHistoryCarousel(deckNames = savedDecks, onDeckClick = onNavigateToCreation)
 
                 Spacer(Modifier.height(16.dp))
 
 
                 Button(
-                    onClick = { onNavigateToCreation() },
+                    onClick = { onNavigateToCreation("New Deck") },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
                     modifier = Modifier.fillMaxWidth(
 
@@ -144,7 +146,7 @@ data class CarouselItem(
     val description: String,
     val icon: ImageVector
 )
-
+// fuj kdo mara sample DELETI
 val sampleFlashcardDecks =
     listOf(
         CarouselItem(0, "Spanish Vocab", "Essential verbs and daily conversational phrases", Icons.Default.Translate),
@@ -162,9 +164,25 @@ val sampleFlashcardDecks =
 
 
 @Composable
-fun DeckHistoryCarousel() {
+fun DeckHistoryCarousel(deckNames: List<String>, onDeckClick: (String) -> Unit) {
 
-    val items = sampleFlashcardDecks
+    if (deckNames.isEmpty()) {
+        Text(
+            "No decks yet — create one below",
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
+        return
+    }
+
+    val items = deckNames.map { name ->
+        CarouselItem(
+            id = name.hashCode(),
+            title = name,
+            description = "Tap to open",
+            icon = Icons.Default.AutoAwesome
+        )
+    }
+
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -191,6 +209,7 @@ fun DeckHistoryCarousel() {
                     .height(205.dp)
                     .maskClip(MaterialTheme.shapes.extraLarge)
                     .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .clickable { onDeckClick(item.title) }
                     .padding(12.dp)
             ) {
                 Column(
