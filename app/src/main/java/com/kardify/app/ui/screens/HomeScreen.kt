@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldLineLimits
@@ -21,20 +20,17 @@ import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AddCard
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Biotech
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Functions
 import androidx.compose.material.icons.filled.Gavel
-import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material3.Button
@@ -48,7 +44,6 @@ import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.carousel.HorizontalUncontainedCarousel
@@ -57,7 +52,6 @@ import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -66,13 +60,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
-import androidx.compose.ui.platform.LocalContext
 import com.kardify.app.db.DeckStore
+import kotlinx.coroutines.launch
+
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
@@ -94,7 +89,7 @@ fun HomeScreen(
             contentAlignment = Alignment.TopStart
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally){
-                SimpleSearchBarSample()
+                SimpleSearchBarSample(deckNames = savedDecks)
 
                 Spacer(Modifier.height(16.dp))
 
@@ -146,21 +141,6 @@ data class CarouselItem(
     val description: String,
     val icon: ImageVector
 )
-// fuj kdo mara sample DELETI
-val sampleFlashcardDecks =
-    listOf(
-        CarouselItem(0, "Spanish Vocab", "Essential verbs and daily conversational phrases", Icons.Default.Translate),
-        CarouselItem(1, "MCAT Biology", "Cellular respiration, genetics, and organ systems", Icons.Default.Biotech),
-        CarouselItem(2, "World Capitals", "Test your geography knowledge across 6 continents", Icons.Default.Public),
-        CarouselItem(3, "Bar Exam Prep", "Constitutional law and torts deep-dive review", Icons.Default.Gavel),
-        CarouselItem(4, "Japanese Kanji", "JLPT N5 level characters and stroke orders", Icons.Default.MenuBook),
-        CarouselItem(5, "Python Basics", "Syntax, data structures, and OOP principles", Icons.Default.Terminal),
-        CarouselItem(6, "Art History", "Famous masterpieces from the Renaissance to Pop Art", Icons.Default.Palette),
-        CarouselItem(7, "Driving Theory", "Traffic signs, right-of-way rules, and safety", Icons.Default.DirectionsCar),
-        CarouselItem(8, "Human Anatomy", "Skeletal and muscular systems study guide", Icons.Default.FitnessCenter),
-        CarouselItem(9, "Mental Math", "Tricks for fast multiplication and percentages", Icons.Default.Functions)
-    )
-
 
 
 @Composable
@@ -168,7 +148,7 @@ fun DeckHistoryCarousel(deckNames: List<String>, onDeckClick: (String) -> Unit) 
 
     if (deckNames.isEmpty()) {
         Text(
-            "No decks yet — create one below",
+            "No decks were found.",
             modifier = Modifier.padding(horizontal = 16.dp)
         )
         return
@@ -178,8 +158,8 @@ fun DeckHistoryCarousel(deckNames: List<String>, onDeckClick: (String) -> Unit) 
         CarouselItem(
             id = name.hashCode(),
             title = name,
-            description = "Tap to open",
-            icon = Icons.Default.AutoAwesome
+            description = "Tap to open", //todo cmonnn Samo
+            icon = Icons.Default.AutoAwesome //todo and also this. the database should house the icon and desc as well
         )
     }
 
@@ -255,7 +235,7 @@ fun DeckHistoryCarousel(deckNames: List<String>, onDeckClick: (String) -> Unit) 
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun SimpleSearchBarSample() {
+fun SimpleSearchBarSample(deckNames: List<String>, ) {
     val searchBarState = rememberSearchBarState()
     val textFieldState = rememberTextFieldState()
     val scope = rememberCoroutineScope()
@@ -276,6 +256,7 @@ fun SimpleSearchBarSample() {
     SearchBar(state = searchBarState, inputField = inputField)
     ExpandedFullScreenSearchBar(state = searchBarState, inputField = inputField) {
         SampleSearchResults(
+            deckNames = deckNames,
             onResultClick = { result ->
                 textFieldState.setTextAndPlaceCursorAtEnd(result)
                 scope.launch { searchBarState.animateToCollapsed() }
@@ -285,9 +266,18 @@ fun SimpleSearchBarSample() {
 }
 
 @Composable
-private fun SampleSearchResults(onResultClick: (String) -> Unit, modifier: Modifier = Modifier) {
+private fun SampleSearchResults(deckNames: List<String>, onResultClick: (String) -> Unit, modifier: Modifier = Modifier) {
+    val items = deckNames.map { name ->
+        CarouselItem(
+            id = name.hashCode(),
+            title = name,
+            description = "Description",
+            icon = Icons.Default.AutoAwesome
+        )
+    }
+
     Column(modifier.verticalScroll(rememberScrollState())) {
-        sampleFlashcardDecks.forEach { item ->
+        items.forEach { item ->
             ListItem(
                 headlineContent = { Text(item.title) },
                 supportingContent = { Text(item.description) },
